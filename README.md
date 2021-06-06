@@ -25,7 +25,7 @@ To run the scripts, edit data\portfolio_simple.csv to your own portfolio and run
 python scripts/analysis_scripts/basic_analysis.py
 ```
 This will produce an analysed portfolio_analysed.csv file with further information.
-![alt text](https://github.com/MichaelCullen2011/Finance/blob/main/analysed_csv.png?raw=true)
+![alt text](https://github.com/MichaelCullen2011/StockAnalysisAndPredictor/blob/images/analysed_csv.png?raw=true)
 
 
 ##### Strategy Backtesting
