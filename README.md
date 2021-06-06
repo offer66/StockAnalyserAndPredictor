@@ -25,7 +25,7 @@ To run the scripts, edit data\portfolio_simple.csv to your own portfolio and run
 python scripts/analysis_scripts/basic_analysis.py
 ```
 This will produce an analysed portfolio_analysed.csv file with further information.
-![alt text](https://github.com/MichaelCullen2011/StockAnalysisAndPredictor/blob/images/analysed_csv.png?raw=true)
+![alt text](https://github.com/MichaelCullen2011/StockAnalyserAndPredictor/blob/main/images/analysed_csv.png?raw=true)
 
 
 ##### Strategy Backtesting
@@ -35,21 +35,21 @@ Edit the script so that the stocks list and start date are to your custom values
 ```
 python scripts/analysis_scripts/backtest.py
 ```
-![alt text](https://github.com/MichaelCullen2011/StockAnalysisAndPredictor/blob/main/backtest.png?raw=true)
+![alt text](https://github.com/MichaelCullen2011/StockAnalyserAndPredictor/blob/main/images/backtest.png?raw=true)
 
 ##### Greenline
 This script calculates the last solid green line, providing the price and the date. These greenlines are good indicators for the last safe price of a stock.
 ```
 python scripts/analysis_scripts/greenline.py
 ```
-![alt text](https://github.com/MichaelCullen2011/StockAnalysisAndPredictor/blob/main/greenline.png?raw=true)
+![alt text](https://github.com/MichaelCullen2011/StockAnalyserAndPredictor/blob/main/images/greenline.png?raw=true)
 
 ##### Resistance and Pivots
 This script calculates the pivot points of a stock and plots them. Once again the stocks and the start date can be edited within the script to customise your data.
 ```
 python scripts/analysis_scripts/resistance_and_pivots.py
 ```
-![alt text](https://github.com/MichaelCullen2011/StockAnalysisAndPredictor/blob/main/pivots.png?raw=true)
+![alt text](https://github.com/MichaelCullen2011/StockAnalyserAndPredictor/blob/main/images/pivots.png?raw=true)
 
 
 ##### Trading View
@@ -57,7 +57,7 @@ This script calculates shows a trading view of a stock.
 ```
 python scripts/analysis_scripts/trading_view.py
 ```
-![alt text](https://github.com/MichaelCullen2011/StockAnalysisAndPredictor/blob/main/tradingview.png?raw=true)
+![alt text](https://github.com/MichaelCullen2011/StockAnalyserAndPredictor/blob/main/images/tradingview.png?raw=true)
 
 
 #### Predictions
@@ -70,7 +70,7 @@ To use, edit the symbols list in model_create_predict.py
 python scripts/prediction_scripts/model_create_predict.py
 ```
 
-![alt text](https://github.com/MichaelCullen2011/StockAnalysisAndPredictor/blob/master/predictor.png?raw=true)
+![alt text](https://github.com/MichaelCullen2011/StockAnalyserAndPredictor/blob/main/images/predictor.png?raw=true)
 
 
 
