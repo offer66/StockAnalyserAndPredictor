@@ -70,7 +70,7 @@ To use, edit the symbols list in model_create_predict.py
 python scripts/prediction_scripts/model_create_predict.py
 ```
 
-![alt text](https://github.com/MichaelCullen2011/StockAnalyserAndPredictor/blob/main/images/predictor.png?raw=true)
+![alt text](https://github.com/MichaelCullen2011/StockAnalyserAndPredictor/blob/main/images/predictor_new.png?raw=true)
 
 
 
