@@ -1,0 +1,6 @@
+data,AMZN-MV-manual-data-days-100-epochs-validation.csv
+avg_point_difference,8.515262500000034
+avg_perc_close,-0.14439625018452332
+avg_perc_predicted,-0.11704596578727473
+avg_perc_difference,0.027350284397248584
+avg_error_predicted,0.14535121501548173

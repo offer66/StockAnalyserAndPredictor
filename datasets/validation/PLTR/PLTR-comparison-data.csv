@@ -1,0 +1,6 @@
+data,PLTR-MV-manual-data-days-100-epochs-validation.csv
+avg_point_difference,0.12663959375000022
+avg_perc_close,0.26392841672792605
+avg_perc_predicted,0.27771292765825933
+avg_perc_difference,0.013784510930333494
+avg_error_predicted,0.9501332425621376

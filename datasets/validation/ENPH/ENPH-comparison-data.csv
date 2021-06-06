@@ -1,0 +1,6 @@
+data,ENPH-MV-manual-data-days-100-epochs-validation.csv
+avg_point_difference,7.948331718750001
+avg_perc_close,-0.36458116995643103
+avg_perc_predicted,-0.12147497193727222
+avg_perc_difference,0.24310619801915892
+avg_error_predicted,6.062289662990184

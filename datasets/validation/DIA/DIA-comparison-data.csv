@@ -1,0 +1,6 @@
+data,DIA-MV-manual-data-days-100-epochs-validation.csv
+avg_point_difference,-0.1735968750000012
+avg_perc_close,0.06424079261834587
+avg_perc_predicted,0.0671506693542853
+avg_perc_difference,0.0029098767359394466
+avg_error_predicted,0.028144114997200886

@@ -1,0 +1,6 @@
+data,NIO-MV-manual-data-days-100-epochs-validation.csv
+avg_point_difference,-0.6724388124999996
+avg_perc_close,0.31500747090950687
+avg_perc_predicted,0.3312355437903869
+avg_perc_difference,0.016228072880880122
+avg_error_predicted,-1.288427133925023

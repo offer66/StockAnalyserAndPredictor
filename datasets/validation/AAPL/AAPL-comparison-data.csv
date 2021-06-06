@@ -1,0 +1,6 @@
+data,AAPL-MV-manual-data-days-100-epochs-validation.csv
+avg_point_difference,0.8196144999999988
+avg_perc_close,-0.17944912500273433
+avg_perc_predicted,-0.18214578968042913
+avg_perc_difference,-0.0026966646776948296
+avg_error_predicted,0.5015257742164707

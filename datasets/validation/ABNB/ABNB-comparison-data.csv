@@ -1,0 +1,6 @@
+data,ABNB-MV-manual-data-days-100-epochs-validation.csv
+avg_point_difference,5.833340625000001
+avg_perc_close,-0.2852673115511749
+avg_perc_predicted,-0.38687167412143303
+avg_perc_difference,-0.101604362570258
+avg_error_predicted,3.8019976165289693
