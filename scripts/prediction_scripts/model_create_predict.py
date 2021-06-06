@@ -435,7 +435,7 @@ if __name__=="__main__":
 	]
 
 	# class that initialises our variables, data, objs
-	var = Variables(symbols=symbols, future=1, timescale='days', validate=True)			# currently only works with day data (not hour or minute data as future hours and minutes need to be generated)
+	var = Variables(symbols=symbols, future=5, timescale='days', validate=False)			# currently only works with day data (not hour or minute data as future hours and minutes need to be generated)
 
 	for symbol in var.symbols:
 		# define training and predict bools based on if a model already exists
