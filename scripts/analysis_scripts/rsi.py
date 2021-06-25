@@ -53,16 +53,14 @@ def averages(up_prices, down_prices):
 def rsi(close_prices, avg_gain, avg_loss):
     RS = []
     RSI = []
-    p = 0
-    while p < len(close_prices):
-        if p < 15:
+    for p in range(len(close_prices)):
+        if p < 15 or avg_loss[p] == 0:
             RS.append(0)
             RSI.append(0)
         else:
             RSvalue = (avg_gain[p] / avg_loss[p])
             RS.append(RSvalue)
             RSI.append(100 - (100 / (1 + RSvalue)))
-        p += 1
     return RS, RSI
 
 
@@ -156,7 +154,7 @@ def run(stock, start_date, rsi_comparison):
 
 
 if __name__ == '__main__':
-    symbols = ['AAPL', 'TSLA', 'GME']
+    symbols = ['BTC-USD', 'ETH-USD']
     start_date = '2019-01-01'
     rsi_comparison = pd.DataFrame(columns=[
         "Company", "Current_RSI", "Days_Observed", "Crosses", 

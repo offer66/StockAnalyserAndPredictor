@@ -104,8 +104,8 @@ def run(stocks, start_date):
         pivots_plot(df=prices, stock=stock, days=30)
 
 if __name__=='__main__':
-    stocks = ['AAPL']
-    start_date = datetime(2020, 12, 1)
+    stocks = ['ETH-USD']
+    start_date = datetime(2021, 4, 1)
     run(stocks, start_date)
     plt.show()
 

@@ -1,6 +1,6 @@
-data,TSLA-MV-manual-data-days-100-epochs-validation.csv
-avg_point_difference,12.699280937499996
-avg_perc_close,-0.6530986018151711
-avg_perc_predicted,-0.5097024881062776
-avg_perc_difference,0.14339611370889346
-avg_error_predicted,1.6452708036824297
+data,TSLA-MV-manual-data-days-100-epochs-validation.csv,TSLA-days-100epochs-extracol-validation.csv
+avg_point_difference,12.699280937499996,47.894301818181816
+avg_perc_close,-0.6530986018151711,0.2771618660207652
+avg_perc_predicted,-0.5097024881062776,0.13618413300299956
+avg_perc_difference,0.1433961137088934,-0.14097773301776578
+avg_error_predicted,1.6452708036824295,8.323725669429804

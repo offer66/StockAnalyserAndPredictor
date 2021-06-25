@@ -45,7 +45,7 @@ def run(stocks, start_date):
 
     
 if __name__=='__main__':
-    stocks = ['AAPL']
+    stocks = ['GME']
     start_date = datetime(1980, 12, 1)
     run(stocks, start_date)
 

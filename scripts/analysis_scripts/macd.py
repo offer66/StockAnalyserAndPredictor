@@ -281,7 +281,7 @@ class DailyMACD(object):
 
 
 if __name__ == '__main__':
-    symbols = ['AAPL', 'TSLA', 'GME']
+    symbols = ['BTC-USD']
     start_date = '2019-01-01'
     macd = {}
     macd_comparison = pd.DataFrame(columns=[

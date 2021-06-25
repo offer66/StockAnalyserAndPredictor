@@ -83,7 +83,7 @@ def run(stocks, start_date):
         plt.show()
 
 if __name__=='__main__':
-    stocks = ['AAPL']
+    stocks = ['BTC-USD']
     start_date = datetime(2021, 1, 1)
     run(stocks, start_date)
 

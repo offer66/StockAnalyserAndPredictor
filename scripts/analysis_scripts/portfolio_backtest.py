@@ -222,7 +222,7 @@ def run(symbols, backtest_time):
 	plt.show()
 
 if __name__ == '__main__':
-	stocks = ['AAPL', 'TSLA', 'AMD', 'ENPH', 'NIO', 'PLTR', 'ABNB', 'ETSY', 'GME']
+	stocks = ['AAPL']
 	coins = ['BTC', 'ETH', 'DOGE', 'AAPL']
 	portfolio = portfolio_data['symbol'].tolist()
 
@@ -230,4 +230,4 @@ if __name__ == '__main__':
 
 	backtest_time = 0.5		# will backtest from 0.5 years before today to today
 
-	run(symbols=portfolio, backtest_time=backtest_time)
+	run(symbols=stocks, backtest_time=backtest_time)

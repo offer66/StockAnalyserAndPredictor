@@ -178,10 +178,9 @@ def run(months, symbols=['AAPL'], show_plot=False):
     return intraday_df, interval
 
 if __name__=='__main__':
+	# 'AAPL', 'TSLA', 'GME', 'ABNB', 'PLTR', 'ETSY', 'ENPH', 'GOOG', 'AMZN', 'IBM', 'DIA', 'IVV', 'NIO'
     symbols = [
-        'AAPL', 'TSLA', 'NIO', 'GOOG', 
-        'ETSY', 'ENPH', 'AMZN', 'IBM',
-        'DIA', 'IVV', 'GME', 'ABNB', 'PLTR'
+        'AAPL', 'TSLA', 'GME', 'ABNB', 'PLTR', 'ETSY', 'ENPH', 'GOOG', 'AMZN', 'IBM', 'DIA', 'IVV', 'NIO'
     ]
     coins = [
         'BTC', 'ETH', 'NANO', 'ADA', 'BAT',

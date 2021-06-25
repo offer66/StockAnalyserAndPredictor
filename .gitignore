@@ -1,6 +1,7 @@
 /.venv/
 /.history/
 /.vscode/
+/models/
 /datasets/scraped/
 /analysis_scripts/__pycache__/
 /prediction_scripts/__pycache__/
