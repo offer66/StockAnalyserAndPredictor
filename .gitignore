@@ -3,5 +3,6 @@
 /.vscode/
 /models/
 /datasets/scraped/
+/datasets/predicted/
 /analysis_scripts/__pycache__/
 /prediction_scripts/__pycache__/
