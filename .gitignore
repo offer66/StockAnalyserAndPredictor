@@ -7,4 +7,5 @@
 /analysis_scripts/__pycache__/
 /prediction_scripts/__pycache__/
 config.json
-
+scripts/prediction_scripts/stock_pipeline_local.py
+scripts/prediction_scripts/run_stock_pipeline.bat
