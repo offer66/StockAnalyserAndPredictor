@@ -14,7 +14,6 @@ import yfinance as yf
 from sklearn.preprocessing import MinMaxScaler, LabelEncoder
 from sklearn.metrics import mean_squared_error
 
-import stock_scraper as pipeline
 import model_comparison as validation_csv
 import rsi as rsi_calc
 
