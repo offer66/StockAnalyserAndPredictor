@@ -71,7 +71,7 @@ def run(symbols):
             print(f"Fetching data for {symbol} between {dates_to_fetch[0]} - {dates_to_fetch[-1]} ...")
             '''get data and store in dictionary so it's easy to access each symbol and a corresponding day'''
             combined_dfs[symbol] = fetch_data(symbol, dates_to_fetch)[1]
-            '''save data a csv'''
+            '''save data as a csv'''
         elif av_scrape_bool:
             print(f"Fetching data for {symbol} through Alpha-Vantage's 2 year API...")
             av_scraper.run(months=24, symbols=[symbol])
@@ -83,7 +83,7 @@ def run(symbols):
 if __name__=='__main__':
 	# 'AAPL', 'TSLA', 'GME', 'ABNB', 'PLTR', 'ETSY', 'ENPH', 'GOOG', 'AMZN', 'IBM', 'DIA', 'IVV', 'NIO'
     symbols = [
-        'AAPL', 'AMC'
+        'AAPL', 'TSLA', 'GME', 'ABNB', 'PLTR', 'ETSY', 'ENPH', 'GOOG', 'AMZN', 'IBM', 'DIA', 'IVV', 'NIO'
     ]       # 13 tickers use ~20% of api usage
     run(symbols)
 

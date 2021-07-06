@@ -9,3 +9,4 @@
 config.json
 scripts/prediction_scripts/stock_pipeline_local.py
 scripts/prediction_scripts/run_stock_pipeline.bat
+scripts\data_scripts\
