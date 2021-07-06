@@ -491,20 +491,17 @@ if __name__=="__main__":
 		'AAPL', 'GME', 'ABNB', 'PLTR', 'ETSY', 'ENPH', 'GOOG', 'AMZN', 'IBM', 'DIA', 'IVV', 'NIO'
 	]
 
-	symbols = ['AAPL']
-
 	# class that initialises our variables, data, objs
 	var = Variables(symbols=symbols, future=1, timescale='days', validate=False, extra_cols_bool=True)
-	print(var.extra_cols_data['AAPL'])
-
-	# for symbol in var.symbols:
-	# 	# define training and predict bools based on if a model already exists
-	# 	model_name = f'{symbol}-{var.timescale}-{var.epochs}epochs-extracol' if var.extra_cols_bool else f'{symbol}-{var.timescale}-{var.epochs}epochs'
-	# 	train_bool = False if model_exists(path_vars=[symbol, var.future, var.timescale, model_name]) else True
-	# 	predict_future = False if train_bool else True
+	
+	for symbol in var.symbols:
+		# define training and predict bools based on if a model already exists
+		model_name = f'{symbol}-{var.timescale}-{var.epochs}epochs-extracol' if var.extra_cols_bool else f'{symbol}-{var.timescale}-{var.epochs}epochs'
+		train_bool = False if model_exists(path_vars=[symbol, var.future, var.timescale, model_name]) else True
+		predict_future = False if train_bool else True
 		
-	# 	# run the training/predicting script
-	# 	create_and_predict(symbol=symbol)
+		# run the training/predicting script
+		create_and_predict(symbol=symbol)
 
 	# show our plotted graphs
 	plt.show()
