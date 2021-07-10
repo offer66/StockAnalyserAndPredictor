@@ -1,6 +1,7 @@
 import os
 import sys
 sys.path.append("scripts\\analysis_scripts\\")
+print(sys.version)
 import datetime
 
 import matplotlib as mpl
@@ -32,7 +33,7 @@ _models = os.path.join(_root, 'models')
 
 
 class Variables:
-	def __init__(self, symbols=['AAPL'], future=1, timescale='days', validate=False, extra_cols_bool=False):
+	def __init__(self, symbols: list=['AAPL'], future: int=1, timescale: str='days', validate: bool=False, extra_cols_bool: bool=False):
 		print(f"Gathering data for {symbols} and creating variables for training...")
 		# symbols to run ML on
 		self.symbols = symbols	# 'AAPL', 'TSLA', 'GME', 'GOOG', 'ETSY', 'ENPH', 'AMZN', 'IBM', 'DIA', 'IVV', 'NIO'
@@ -40,12 +41,12 @@ class Variables:
 		# directories
 		self._data = os.path.join(_root, 'datasets\\scraped\\')
 		self._dirs = Variables.make_dirs(self)		# dict will be layed out according to --> {_dirs[ticker] = [_plots, _pred_data, _valid_data]}
-
+		
 		# data on dates and trading days
 		self.today = datetime.date.today()
 		self.start_date = self.today - datetime.timedelta(days=6 * 30)		# how far back we access yahoo finance stock EOD data
 		self.valid_days = Variables.trading_days(self)
-
+		
 		# settings for ML
 		self.future = future
 		self.timescale = timescale
@@ -53,10 +54,10 @@ class Variables:
 		self.extra_cols_bool = extra_cols_bool
 		self.epochs = Variables.get_epoch(self)
 		self.batch = Variables.get_batch(self)
-
+		
 		# dictionary with panda df's for each ticker in symbols
 		# dict will be layed out according to --> {ticker: [dataframe, date_time]}
-		self.data_dict = Variables.get_yahoo_data(self) if self.timescale == 'days' else Variables.get_minute_data(self)
+		self.data_dict = Variables.get_yahoo_data_faster(self) if self.timescale == 'days' else Variables.get_minute_data(self)
 		self.subsampled_data = Variables.subsample(self)
 		self.extra_cols_data = Variables.extra_cols_calculations(self)
 		self.column_names = self.extra_cols_data[self.symbols[0]][0].columns if self.extra_cols_bool else self.subsampled_data[self.symbols[0]][0].columns		# assuming all df's have the same col names
@@ -131,7 +132,16 @@ class Variables:
 			data = data.set_index('time')
 			data_dict[ticker] = data
 			# print(f"{ticker} yahoo data: \n {data.head(3)} \n ---------- \n {data.tail(3)} \n ---------- \n {data.shape}")
+		print(data_dict)
 		return data_dict
+	
+	def get_yahoo_data_faster(self):	# faster scraping method (does all tickers at once)
+		data = pdr.get_data_yahoo(self.symbols, start=self.start_date, end=self.today)
+		data = data.swaplevel(0, 1, axis=1)
+		data = data.reset_index()
+		data = data.rename(columns={'Date': 'time', 'Open': 'open', 'High': 'high', 'Low': 'low', 'Close': 'close', 'Adj Close': 'adj close', 'Volume': 'volume'})
+		data = data.set_index('time')
+		return data
 
 	def subsample(self):
 		# dict will be layed out according to --> {ticker: [dataframe, date_time]}
@@ -492,7 +502,7 @@ if __name__=="__main__":
 	]
 
 	# class that initialises our variables, data, objs
-	var = Variables(symbols=symbols, future=1, timescale='days', validate=False, extra_cols_bool=True)
+	var = Variables(symbols=['AAPL', 'TSLA'], future=1, timescale='days', validate=False, extra_cols_bool=True)
 	
 	for symbol in var.symbols:
 		# define training and predict bools based on if a model already exists
