@@ -4,6 +4,7 @@
 models/
 datasets/scraped/
 datasets/predicted/
+datasets/validation/
 scripts/analysis_scripts/__pycache__/
 scripts/prediction_scripts/__pycache__/
 config.json

@@ -12,6 +12,8 @@ from pandas_datareader import data as pdr
 import pandas_market_calendars as mcal
 import yfinance as yf
 
+import tensorflow as tf
+
 from sklearn.preprocessing import MinMaxScaler, LabelEncoder
 from sklearn.metrics import mean_squared_error
 
@@ -73,7 +75,7 @@ class InitialiseDates:
 
 class InitialiseMLVars:
 	''' Initialises the variables needed for the ML training '''
-	def __init__(self, future: int=1, timescale: str='days', validate: bool=True, extra_cols_bool: bool=True):
+	def __init__(self, future: int=1, timescale: str='days', validate: bool=False, extra_cols_bool: bool=True):
 		self.future = future
 		self.timescale = timescale
 		self.validate = validate
@@ -109,7 +111,7 @@ class StockData:
 		self.column_names: list = self.extra_cols_data[self.symbols[0]][0].columns if self.extra_cols_bool else self.subsampled_data[self.symbols[0]][0].columns		# assuming all df's have the same col names
 
 		self.last_date = self.subsampled_data[symbols[0]][1].iat[-1]
-		self.total_dates, self.next_dates = Variables.create_future_dates(self)
+		self.total_dates, self.next_dates = self.create_future_dates()
 
 
 	def get_minute_data(self) -> dict:
@@ -173,7 +175,7 @@ class StockData:
 
 	def create_future_dates(self) -> (list, list):
 		date_time = self.subsampled_data[symbols[0]][1]		# this is assuming all tickers trade on the same day
-		next_dates = Variables.next_trading_days(self)
+		next_dates = self.next_trading_days()
 		
 		total_dates = date_time.tolist() if not isinstance(date_time, list) else date_time
 		for date in next_dates:
@@ -261,8 +263,6 @@ def verify_model_predictions(input_data, input_objs, input_vars) -> (pd.DataFram
 	inv_y = scaler.inverse_transform(inv_y)
 	
 	rmse = np.sqrt(mean_squared_error(inv_y[:,0], inv_yhat[:,0]))
-	print('Test RMSE: %.3f' % rmse)
-
 	predicted_data = pd.DataFrame({name: [] for name in var.column_names})
 	actual_data = pd.DataFrame({name: [] for name in var.column_names})
 
@@ -298,8 +298,6 @@ def verify_model_predictions(input_data, input_objs, input_vars) -> (pd.DataFram
 	predicted_data.set_index('time', inplace=True)
 	actual_data.set_index('time', inplace=True)
 	valid_plot.set_index('time', inplace=True)
-	
-	print(predicted_data)
 
 	# plot
 	fig2, ax2 = plt.subplots()
@@ -334,7 +332,6 @@ def prediction_loop(input_data, input_objs, input_vars) -> (pd.DataFrame, pd.Dat
 	
 	# print("\n predicted df \n", predicted_data)
 	df = pd.concat([df, predicted_data])
-	print(df)
 	try:
 		df = df.set_index(['time'])
 	except KeyError:
@@ -384,7 +381,6 @@ def create_and_predict(symbol):
 	model_name = f'{symbol}-{ML.timescale}-{ML.epochs}epochs-extracol' if ML.extra_cols_bool else f'{symbol}-{ML.timescale}-{ML.epochs}epochs'
 	valid_file_name = f'{symbol}-{ML.timescale}-{ML.epochs}epochs-extracol-validation.csv' if var.extra_cols_bool else f'{symbol}-{ML.timescale}-{ML.epochs}epochs-validation.csv'
 
-	print(f"{symbol} dataframe: \n {df} \n")
 	timescale = ML.timescale
 	epochs = ML.epochs
 	train_model = train_bool
@@ -404,7 +400,6 @@ def create_and_predict(symbol):
 
 
 	## define and train the model
-	import tensorflow as tf
 	if train_model:
 		model = tf.keras.Sequential([
 			tf.keras.layers.LSTM(units=50, return_sequences=False, input_shape=(x_train.shape[1], x_train.shape[2])),
@@ -432,8 +427,6 @@ def create_and_predict(symbol):
 		input_objs = [model, scaler]
 		input_vars = [symbol, batch, num_features, n]
 		predicted_data, actual_data, valid_plot = verify_model_predictions(input_data, input_objs, input_vars)
-		print("Predicted DF: \n", predicted_data)
-		print("Actual DF: \n", actual_data)
 
 		# add to validation csv (to compare between models)
 		valid_plot.to_csv(os.path.join(var._dirs[symbol][2], valid_file_name))
@@ -483,8 +476,8 @@ if __name__=="__main__":
 	# 'AAPL', 'GME', 'ABNB', 'PLTR', 'ETSY', 'ENPH', 'GOOG', 'AMZN', 'IBM', 'DIA', 'IVV', 'NIO'
 	# 'BTC-USD', 'ETH-USD', 'NANO-USD', 'ADA-USD'
 	symbols = [
-		'AAPL', 'TSLA'
-		]
+		'AAPL', 'GME', 'ABNB', 'PLTR', 'ETSY', 'ENPH', 'GOOG', 'AMZN', 'IBM', 'DIA', 'IVV', 'NIO'
+	]
 	
 	dates = InitialiseDates()
 	ML = InitialiseMLVars(future=1, timescale='days')
@@ -500,4 +493,4 @@ if __name__=="__main__":
 		create_and_predict(symbol=symbol)
 		
 	# show our plotted graphs
-	plt.show()
+	# plt.show()

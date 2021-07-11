@@ -12,6 +12,8 @@ from pandas_datareader import data as pdr
 import pandas_market_calendars as mcal
 import yfinance as yf
 
+import tensorflow as tf
+
 from sklearn.preprocessing import MinMaxScaler, LabelEncoder
 from sklearn.metrics import mean_squared_error
 
@@ -132,7 +134,6 @@ class Variables:
 			data = data.set_index('time')
 			data_dict[ticker] = data
 			# print(f"{ticker} yahoo data: \n {data.head(3)} \n ---------- \n {data.tail(3)} \n ---------- \n {data.shape}")
-		print(data_dict)
 		return data_dict
 	
 	def get_yahoo_data_faster(self):	# faster scraping method (does all tickers at once)
@@ -276,7 +277,6 @@ def verify_model_predictions(input_data, input_objs, input_vars):
 	inv_y = scaler.inverse_transform(inv_y)
 	
 	rmse = np.sqrt(mean_squared_error(inv_y[:,0], inv_yhat[:,0]))
-	print('Test RMSE: %.3f' % rmse)
 
 	predicted_data = pd.DataFrame({name: [] for name in var.column_names})
 	actual_data = pd.DataFrame({name: [] for name in var.column_names})
@@ -313,8 +313,6 @@ def verify_model_predictions(input_data, input_objs, input_vars):
 	predicted_data.set_index('time', inplace=True)
 	actual_data.set_index('time', inplace=True)
 	valid_plot.set_index('time', inplace=True)
-	
-	print(predicted_data)
 
 	# plot
 	fig2, ax2 = plt.subplots()
@@ -349,7 +347,6 @@ def prediction_loop(input_data, input_objs, input_vars):
 	
 	# print("\n predicted df \n", predicted_data)
 	df = pd.concat([df, predicted_data])
-	print(df)
 	try:
 		df = df.set_index(['time'])
 	except KeyError:
@@ -399,7 +396,6 @@ def create_and_predict(symbol):
 	model_name = f'{symbol}-{var.timescale}-{var.epochs}epochs-extracol' if var.extra_cols_bool else f'{symbol}-{var.timescale}-{var.epochs}epochs'
 	valid_file_name = f'{symbol}-{var.timescale}-{var.epochs}epochs-extracol-validation.csv' if var.extra_cols_bool else f'{symbol}-{var.timescale}-{var.epochs}epochs-validation.csv'
 
-	print(f"{symbol} dataframe: \n {df} \n")
 	timescale = var.timescale
 	epochs = var.epochs
 	train_model = train_bool
@@ -419,7 +415,6 @@ def create_and_predict(symbol):
 
 
 	## define and train the model
-	import tensorflow as tf
 	if train_model:
 		model = tf.keras.Sequential([
 			tf.keras.layers.LSTM(units=50, return_sequences=False, input_shape=(x_train.shape[1], x_train.shape[2])),
@@ -447,8 +442,6 @@ def create_and_predict(symbol):
 		input_objs = [model, scaler]
 		input_vars = [symbol, batch, num_features, n]
 		predicted_data, actual_data, valid_plot = verify_model_predictions(input_data, input_objs, input_vars)
-		print("Predicted DF: \n", predicted_data)
-		print("Actual DF: \n", actual_data)
 
 		# add to validation csv (to compare between models)
 		valid_plot.to_csv(os.path.join(var._dirs[symbol][2], valid_file_name))
@@ -502,7 +495,7 @@ if __name__=="__main__":
 	]
 
 	# class that initialises our variables, data, objs
-	var = Variables(symbols=['AAPL', 'TSLA'], future=1, timescale='days', validate=False, extra_cols_bool=True)
+	var = Variables(symbols=symbols, future=1, timescale='days', validate=False, extra_cols_bool=True)
 	
 	for symbol in var.symbols:
 		# define training and predict bools based on if a model already exists
@@ -514,4 +507,4 @@ if __name__=="__main__":
 		create_and_predict(symbol=symbol)
 
 	# show our plotted graphs
-	plt.show()
+	# plt.show()
