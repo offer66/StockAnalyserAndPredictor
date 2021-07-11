@@ -14,7 +14,7 @@ import yfinance as yf
 
 import tensorflow as tf
 
-from sklearn.preprocessing import MinMaxScaler, LabelEncoder
+from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error
 
 import model_comparison as validation_csv
@@ -266,15 +266,6 @@ def verify_model_predictions(input_data, input_objs, input_vars) -> (pd.DataFram
 	predicted_data = pd.DataFrame({name: [] for name in var.column_names})
 	actual_data = pd.DataFrame({name: [] for name in var.column_names})
 
-	# predicted_data = pd.DataFrame({
-	# 	'time': [], 'close': [], 'open': [],
-	# 	'high': [], 'low': [], 'volume': [],
-	# })
-	# actual_data = pd.DataFrame({
-	# 	'time': [], 'close': [], 'open': [],
-	# 	'high': [], 'low': [], 'volume': [],
-	# })
-
 	valid_plot = pd.DataFrame({
 		'time': [], 'close': [], 'predicted': []
 	})
@@ -287,9 +278,6 @@ def verify_model_predictions(input_data, input_objs, input_vars) -> (pd.DataFram
 		actual_data[name] = inv_y[:,i]
 		i += 1
 
-	# predicted_data['close'], predicted_data['open'], predicted_data['high'], predicted_data['low'], predicted_data['volume'] = inv_yhat[:,0], inv_yhat[:,1], inv_yhat[:,2], inv_yhat[:,3], inv_yhat[:,4]
-	# actual_data['close'], actual_data['open'], actual_data['high'], actual_data['low'], actual_data['volume'] = inv_y[:,0], inv_y[:,1], inv_y[:,2], inv_y[:,3], inv_y[:,4]
-	
 	predicted_data = predicted_data.drop_duplicates(subset=['time'])
 	actual_data = actual_data.drop_duplicates(subset=['time'])
 
@@ -456,7 +444,6 @@ def create_and_predict(symbol):
 		actual_df = actual_df.drop_duplicates(subset=['time'])
 		actual_df = actual_df.set_index(['time'])
 
-		# plot new predictions
 		fig3, ax3 = plt.subplots()
 		ax3.set_title(f'{symbol}s Historical Data and {ML.future} New Predicted Prices: ')
 		ax3.set_xlabel(f'Dates')
@@ -484,13 +471,12 @@ if __name__=="__main__":
 	var = StockData(symbols=symbols, dates=dates, ML=ML)
 
 	for symbol in var.symbols:
-		# define training and predict bools based on if a model already exists
+		''' define training and predict bools based on if a model already exists '''
 		model_name = f'{symbol}-{ML.timescale}-{ML.epochs}epochs-extracol' if var.extra_cols_bool else f'{symbol}-{ML.timescale}-{ML.epochs}epochs'
 		train_bool = False if model_exists(path_vars=[symbol, ML.future, ML.timescale, model_name]) else True
 		predict_future = False if train_bool else True
 		
-		# run the training/predicting script
+		''' run the training/predicting script '''
 		create_and_predict(symbol=symbol)
 		
-	# show our plotted graphs
 	plt.show()
