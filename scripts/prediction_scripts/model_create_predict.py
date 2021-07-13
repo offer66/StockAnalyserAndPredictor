@@ -1,4 +1,5 @@
 import os
+import time
 import sys
 sys.path.append("scripts\\analysis_scripts\\")
 print(sys.version)
@@ -14,7 +15,7 @@ import yfinance as yf
 
 import tensorflow as tf
 
-from sklearn.preprocessing import MinMaxScaler, LabelEncoder
+from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error
 
 import model_comparison as validation_csv
@@ -33,122 +34,114 @@ _data = os.path.join(_root, 'datasets\\scraped\\')
 _models = os.path.join(_root, 'models')
 
 
+class InitialiseDirs:
+	''' Initialises and creates the data and dir directories '''
+	def __init__(self, symbols):
+		self.symbols = symbols
+		self._dirs = self.make_dirs()
 
-class Variables:
-	def __init__(self, symbols: list=['AAPL'], future: int=1, timescale: str='days', validate: bool=False, extra_cols_bool: bool=False):
-		print(f"Gathering data for {symbols} and creating variables for training...")
-		# symbols to run ML on
-		self.symbols = symbols	# 'AAPL', 'TSLA', 'GME', 'GOOG', 'ETSY', 'ENPH', 'AMZN', 'IBM', 'DIA', 'IVV', 'NIO'
-
-		# directories
-		self._data = os.path.join(_root, 'datasets\\scraped\\')
-		self._dirs = Variables.make_dirs(self)		# dict will be layed out according to --> {_dirs[ticker] = [_plots, _pred_data, _valid_data]}
-		
-		# data on dates and trading days
-		self.today = datetime.date.today()
-		self.start_date = self.today - datetime.timedelta(days=6 * 30)		# how far back we access yahoo finance stock EOD data
-		self.valid_days = Variables.trading_days(self)
-		
-		# settings for ML
-		self.future = future
-		self.timescale = timescale
-		self.validate = validate
-		self.extra_cols_bool = extra_cols_bool
-		self.epochs = Variables.get_epoch(self)
-		self.batch = Variables.get_batch(self)
-		
-		# dictionary with panda df's for each ticker in symbols
-		# dict will be layed out according to --> {ticker: [dataframe, date_time]}
-		self.data_dict = Variables.get_yahoo_data_faster(self) if self.timescale == 'days' else Variables.get_minute_data(self)
-		self.subsampled_data = Variables.subsample(self)
-		self.extra_cols_data = Variables.extra_cols_calculations(self)
-		self.column_names = self.extra_cols_data[self.symbols[0]][0].columns if self.extra_cols_bool else self.subsampled_data[self.symbols[0]][0].columns		# assuming all df's have the same col names
-
-		# obtains the last trading date by accessing the last documented date for the first symbols data df
-		self.last_date = self.subsampled_data[symbols[0]][1].iat[-1]
-
-		# sorting through future dates
-		self.total_dates, self.next_dates = Variables.create_future_dates(self)
-
-	def make_dirs(self):
+	def make_dirs(self) -> list:
 		# dict will be layed out according to --> {_dirs[ticker] = [_plots, _pred_data, _valid_data]}
 		_dirs = {ticker: [] for ticker in self.symbols}
 		for ticker in _dirs:
-			_plots = os.path.join(_root, f'plots\\{ticker}')
+			_plots = os.path.join(_root, f'datasets\\plots\\{ticker}')
 			_pred_data = os.path.join(_root, f'datasets\\predicted\\{ticker}')
 			_valid_data = os.path.join(_root, f'datasets\\validation\\{ticker}')
+			_scraped_data = os.path.join(_root, f'datasets\\scraped\\{ticker}')
 			try:
 				os.mkdir(_plots)
-			except:
-				pass
-			try:
 				os.mkdir(os.path.join(_plots, 'Predictions'))
-			except:
-				pass
-			try:
 				os.mkdir(_pred_data)
-			except:
-				pass
-			try:
 				os.mkdir(_valid_data)
-			except:
+			except FileExistsError:
 				pass
-			_dirs[ticker] = [_plots, _pred_data, _valid_data]
+			_dirs[ticker] = [_plots, _pred_data, _valid_data, _scraped_data]
 		return _dirs
 
-	def trading_days(self):
-		# gets a list of valid trading days (makes it easier when quickly needing the next trading day such as a Friday or bank holiday)
-		nyse = mcal.get_calendar('NYSE')
 
-		# gets data in range 365*2 (all trading days between past 2 years and future 2 years)
+class InitialiseDates:
+	''' Initialises today, start date and valid trading days '''
+	def __init__(self, start=datetime.date.today() - datetime.timedelta(days=6*30), end=datetime.date.today()):
+		self.today = end
+		self.start_date = start		# how far back we access yahoo finance stock EOD data
+		self.valid_days = self.trading_days()
+
+	def trading_days(self) -> list:
+		''' gets a list of valid trading days for past and future 2 years '''
+		nyse = mcal.get_calendar('NYSE')
 		start_date = self.today - datetime.timedelta(days=365 * 2)
 		end_date = self.today + datetime.timedelta(days=365 * 2)
 		valid_days = nyse.valid_days(start_date=start_date, end_date=end_date)
 		return valid_days
 
-	def get_epoch(self):
+
+class InitialiseMLVars:
+	''' Initialises the variables needed for the ML training '''
+	def __init__(self, future: int=1, timescale: str='days', validate: bool=False, extra_cols_bool: bool=True):
+		self.future = future
+		self.timescale = timescale
+		self.validate = validate
+		self.extra_cols_bool = extra_cols_bool
+		self.epochs = self.get_epoch()
+		self.batch = self.get_batch()
+
+	def get_epoch(self) -> int:
 		epoch_dict = {'mins': 2, 'days': 100}
 		epoch = epoch_dict[self.timescale]
 		return epoch
 
-	def get_batch(self):
+	def get_batch(self) -> int:
 		# if timescale is minutes then batch for hour trends (60mins in an hour)
 		scales = {'mins': 60, 'days': 5, 'weeks': 4}
 		batch = scales[self.timescale]
 		return batch
 
-	def get_minute_data(self):
+
+class StockData:
+	def __init__(self, dates, ML, symbols: list=['AAPL']):
+		self.symbols: list = symbols
+		self._dirs = InitialiseDirs(self.symbols)._dirs
+		self.start_date = dates.start_date
+		self.today = dates.today
+		self.timescale: str = ML.timescale
+		self.future: int = ML.future
+		self.extra_cols_bool: bool = ML.extra_cols_bool
+
+		self.data_dict: dict = self.get_yahoo_data() if self.timescale == 'days' else self.get_minute_data()
+		self.subsampled_data: dict = self.subsample()
+		self.extra_cols_data: dict = self.extra_cols_calculations()
+		self.column_names: list = self.extra_cols_data[self.symbols[0]][0].columns if self.extra_cols_bool else self.subsampled_data[self.symbols[0]][0].columns		# assuming all df's have the same col names
+
+		self.last_date = self.subsampled_data[symbols[0]][1].iat[-1]
+		self.total_dates, self.next_dates = self.create_future_dates()
+
+	def get_minute_data(self) -> dict:
 		data_dict = {ticker: [] for ticker in self.symbols}
 		for ticker in data_dict:
-			data_dict[ticker] = pd.read_csv(os.path.join(os.path.join(self._data, ticker), f'{ticker}-total-data.csv'))
+			data_dict[ticker] = pd.read_csv(os.path.join(self._dirs[ticker][3], f'{ticker}-total-data.csv'))
 			# print(f"{ticker} yahoo data: \n {data_dict[ticker].head(3)} \n ---------- \n {data_dict[ticker].tail(3)} \n ---------- \n {data_dict[ticker].shape}")
 		return data_dict
 
-	def get_yahoo_data(self):
-		data_dict = {ticker: [] for ticker in self.symbols}
-		for ticker in data_dict:
-			data = pdr.get_data_yahoo(ticker, start=self.start_date, end=self.today)
-			data = data.reset_index()
-			data.columns = ['time', 'open', 'high', 'low', 'close', 'adj close', 'volume']
-			data = data[['time', 'open', 'high', 'low', 'close', 'volume']]
-			data = data.set_index('time')
-			data_dict[ticker] = data
-			# print(f"{ticker} yahoo data: \n {data.head(3)} \n ---------- \n {data.tail(3)} \n ---------- \n {data.shape}")
-		return data_dict
-	
-	def get_yahoo_data_faster(self):	# faster scraping method (does all tickers at once)
+	def get_yahoo_data(self) -> pd.DataFrame:	# faster scraping method (does all tickers at once)
 		data = pdr.get_data_yahoo(self.symbols, start=self.start_date, end=self.today)
-		data = data.swaplevel(0, 1, axis=1)
+		try:
+			data = data.swaplevel(0, 1, axis=1)
+		except TypeError:
+			pass	# if TypeError then it's not a multindexed dataframe
 		data = data.reset_index()
 		data = data.rename(columns={'Date': 'time', 'Open': 'open', 'High': 'high', 'Low': 'low', 'Close': 'close', 'Adj Close': 'adj close', 'Volume': 'volume'})
 		data = data.set_index('time')
 		return data
 
-	def subsample(self):
-		# dict will be layed out according to --> {ticker: [dataframe, date_time]}
+	def subsample(self) -> dict:
+		''' subsamples the data depending on timeframes (eg. splits into hour only data)'''
+		# dict --> {ticker: [dataframe, date_time]}
 		subsampled_data = {ticker: [] for ticker in self.symbols}
 		for ticker in subsampled_data.keys():
-			dataframe = self.data_dict[ticker]
+			try:
+				dataframe = self.data_dict[ticker]
+			except KeyError:
+				dataframe = self.data_dict		# just a single df and not a dict
 			dataframe = dataframe.reset_index()
 			dataframe = dataframe[['time', 'close', 'open', 'high' , 'low', 'volume']]
 			if self.timescale == 'days':
@@ -158,11 +151,11 @@ class Variables:
 			subsampled_data[ticker] = [dataframe, date_time]
 		return subsampled_data
 		
-	def extra_cols_calculations(self):
+	def extra_cols_calculations(self) -> dict:
+		''' calculates additional cols for the dataframes (emas, smas, macd, rsi) '''
 		extra_cols_dataframe = {ticker: [] for ticker in self.subsampled_data.keys()}
 		for ticker in self.subsampled_data.keys():
 			dataframe = self.subsampled_data[ticker][0]
-			## do things to dataframe to get additional columns
 			# emas
 			emas_used = [3, 5, 10, 12, 26, 30]
 			smas_used = [10, 30, 50]
@@ -187,16 +180,16 @@ class Variables:
 			extra_cols_dataframe[ticker] = [dataframe, self.subsampled_data[ticker][1]]
 		return extra_cols_dataframe
 
-	def create_future_dates(self):
-		date_time = self.subsampled_data[symbols[0]][1]		# this is assuming all tickers trade on the same day
-		next_dates = Variables.next_trading_days(self)
+	def create_future_dates(self) -> (list, list):
+		date_time = self.subsampled_data[self.symbols[0]][1]		# this is assuming all tickers trade on the same day
+		next_dates = self.next_trading_days()
 		
 		total_dates = date_time.tolist() if not isinstance(date_time, list) else date_time
 		for date in next_dates:
 			total_dates.append(date)
 		return total_dates, next_dates
 
-	def next_trading_days(self):
+	def next_trading_days(self) -> list:
 		nyse = mcal.get_calendar('NYSE')
 		new_dates = []
 		# grab 6 months worth of future trading days to then find the needed dates within this list
@@ -209,7 +202,7 @@ class Variables:
 			return new_dates
 		elif self.timescale == 'mins':
 			# checking to see if we are predicting less than a trading day ahead
-			if self.future < 390:
+			if self.future <= 390:
 				schedule = nyse.schedule(start_date=trading_days[0], end_date=trading_days[0])
 				diff = 390 - self.future	# how far off our prediction is to the end of the actual day
 			else:
@@ -231,13 +224,13 @@ class Variables:
 
 
 
-def model_exists(path_vars):
+def model_exists(path_vars) -> bool:
 	symbol, shift, timescale, model_name = path_vars[0], path_vars[1], path_vars[2], path_vars[3]
 	model_path = os.path.join(_models, model_name)		# currently checking if multi variable models exist
 	return os.path.exists(model_path)
 	
 
-def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
+def series_to_supervised(data, n_in=1, n_out=1, dropnan=True) -> pd.DataFrame:
 	n_vars = 1 if type(data) is list else data.shape[1]
 	df = pd.DataFrame(data)
 	cols, names = list(), list()
@@ -261,7 +254,7 @@ def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
 	return agg
 
 
-def verify_model_predictions(input_data, input_objs, input_vars):
+def verify_model_predictions(input_data, input_objs, input_vars) -> (pd.DataFrame, pd.DataFrame, pd.DataFrame):
 	x_test, date_time, y_test = input_data
 	model, scaler = input_objs
 	symbol, batch, num_features, n = input_vars
@@ -277,34 +270,25 @@ def verify_model_predictions(input_data, input_objs, input_vars):
 	inv_y = scaler.inverse_transform(inv_y)
 	
 	rmse = np.sqrt(mean_squared_error(inv_y[:,0], inv_yhat[:,0]))
-
 	predicted_data = pd.DataFrame({name: [] for name in var.column_names})
 	actual_data = pd.DataFrame({name: [] for name in var.column_names})
-
-	# predicted_data = pd.DataFrame({
-	# 	'time': [], 'close': [], 'open': [],
-	# 	'high': [], 'low': [], 'volume': [],
-	# })
-	# actual_data = pd.DataFrame({
-	# 	'time': [], 'close': [], 'open': [],
-	# 	'high': [], 'low': [], 'volume': [],
-	# })
 
 	valid_plot = pd.DataFrame({
 		'time': [], 'close': [], 'predicted': []
 	})
-	
-	predicted_data['time'], actual_data['time'] = date_time.tolist()[int(n*0.7)+batch:], date_time.tolist()[int(n*0.7)+batch:]
+	shift = {"AAPL": batch+271, "TSLA": batch+945, "GME": batch+5460}
+	shift = batch if ML.timescale == "mins" else batch
+	predicted_data['time'], actual_data['time'] = date_time.tolist()[int(n*0.7)+shift:], date_time.tolist()[int(n*0.7)+shift:]
 
 	i = 0
+	print((len(predicted_data) - len(inv_yhat[:,i])))
+	print((len(predicted_data) - len(inv_yhat[:,i])) / len(date_time))
+	print(inv_yhat[:,i][-5:])
 	for name in var.column_names:
 		predicted_data[name] = inv_yhat[:,i]
 		actual_data[name] = inv_y[:,i]
 		i += 1
 
-	# predicted_data['close'], predicted_data['open'], predicted_data['high'], predicted_data['low'], predicted_data['volume'] = inv_yhat[:,0], inv_yhat[:,1], inv_yhat[:,2], inv_yhat[:,3], inv_yhat[:,4]
-	# actual_data['close'], actual_data['open'], actual_data['high'], actual_data['low'], actual_data['volume'] = inv_y[:,0], inv_y[:,1], inv_y[:,2], inv_y[:,3], inv_y[:,4]
-	
 	predicted_data = predicted_data.drop_duplicates(subset=['time'])
 	actual_data = actual_data.drop_duplicates(subset=['time'])
 
@@ -326,7 +310,7 @@ def verify_model_predictions(input_data, input_objs, input_vars):
 	return predicted_data, actual_data, valid_plot
 	
 
-def prediction_loop(input_data, input_objs, input_vars):
+def prediction_loop(input_data, input_objs, input_vars) -> (pd.DataFrame, pd.DataFrame):
 	x_total, predicted_data, df = input_data
 	scaler, model = input_objs
 	batch, num_features = input_vars
@@ -358,7 +342,7 @@ def prediction_loop(input_data, input_objs, input_vars):
 def transform_data(dataframe, n, num_features):
 	# redefine class variables for the function
 	date_time = var.subsampled_data[symbol][1]
-	batch = var.batch
+	batch = ML.batch
 
 	# transform and scale dataframe values
 	values = dataframe.values
@@ -391,16 +375,16 @@ def create_and_predict(symbol):
 	## setting all the variables
 	symbol = symbol
 
-	df = var.extra_cols_data[symbol][0] if var.extra_cols_bool else var.subsampled_data[symbol][0]
-	date_time = var.extra_cols_data[symbol][1] if var.extra_cols_bool else var.subsampled_data[symbol][1]
-	model_name = f'{symbol}-{var.timescale}-{var.epochs}epochs-extracol' if var.extra_cols_bool else f'{symbol}-{var.timescale}-{var.epochs}epochs'
-	valid_file_name = f'{symbol}-{var.timescale}-{var.epochs}epochs-extracol-validation.csv' if var.extra_cols_bool else f'{symbol}-{var.timescale}-{var.epochs}epochs-validation.csv'
+	df = var.extra_cols_data[symbol][0] if ML.extra_cols_bool else var.subsampled_data[symbol][0]
+	date_time = var.extra_cols_data[symbol][1] if ML.extra_cols_bool else var.subsampled_data[symbol][1]
+	model_name = f'{symbol}-{ML.timescale}-{ML.epochs}epochs-extracol' if ML.extra_cols_bool else f'{symbol}-{ML.timescale}-{ML.epochs}epochs'
+	valid_file_name = f'{symbol}-{ML.timescale}-{ML.epochs}epochs-extracol-validation.csv' if var.extra_cols_bool else f'{symbol}-{ML.timescale}-{ML.epochs}epochs-validation.csv'
 
-	timescale = var.timescale
-	epochs = var.epochs
+	timescale = ML.timescale
+	epochs = ML.epochs
 	train_model = train_bool
-	validate = var.validate
-	batch = var.batch
+	validate = ML.validate
+	batch = ML.batch
 
 	n = df.shape[0]
 	num_features = df.shape[1]
@@ -453,7 +437,8 @@ def create_and_predict(symbol):
 		predicted_data = pd.DataFrame({name: [] for name in var.column_names})
 
 		actual_df = df.copy()
-		for i in range(var.future):
+		start = time.time()
+		for i in range(ML.future):
 			if i != 0:
 				total_values = series_to_supervised(data=scaler.fit_transform(df.values), n_in=batch).values
 				x_total_test = total_values[:, :batch*num_features]
@@ -462,18 +447,19 @@ def create_and_predict(symbol):
 			input_objs = [scaler, model]
 			input_vars = [batch, num_features]
 			prediction_data, df = prediction_loop(input_data, input_objs, input_vars)
-		
+			print(f"prediction for {ML.timescale} {i} done!")
+		print(f"Time to make predictions: {time.time() - start}s")
+
 		df['time'] = pd.to_datetime(total_dates)
 		df = df.drop_duplicates(subset=['time'])
 		df = df.set_index(['time'])
 
-		actual_df['time'] = pd.to_datetime(total_dates[:-var.future])
+		actual_df['time'] = pd.to_datetime(total_dates[:-ML.future])
 		actual_df = actual_df.drop_duplicates(subset=['time'])
 		actual_df = actual_df.set_index(['time'])
 
-		# plot new predictions
 		fig3, ax3 = plt.subplots()
-		ax3.set_title(f'{symbol}s Historical Data and {var.future} New Predicted Prices: ')
+		ax3.set_title(f'{symbol}s Historical Data and {ML.future} New Predicted Prices: ')
 		ax3.set_xlabel(f'Dates')
 		ax3.set_ylabel(f'Price (USD)')
 		splits = int(df.shape[0]/100) if df.shape[0] > 100 else 1
@@ -483,28 +469,30 @@ def create_and_predict(symbol):
 
 		df.to_csv(os.path.join(var._dirs[symbol][1], valid_file_name))
 		
-		print(f"\n prediction data (last {5 + var.future} values): \n {df.tail(5 + var.future)}")
+		print(f"\n prediction data (last {5 + ML.future} values): \n {df.tail(5 + ML.future)}")
 		print(f"\n actual data (last 5 values): \n {actual_df.tail(5)}")
 
 
 if __name__=="__main__":
-	# 'AAPL', 'GME', 'ABNB', 'PLTR', 'ETSY', 'ENPH', 'GOOG', 'AMZN', 'IBM', 'DIA', 'IVV', 'NIO'
+	# 'AAPL', 'TSLA', 'GME', 'ABNB', 'PLTR', 'ETSY', 'ENPH', 'GOOG', 'AMZN', 'IBM', 'DIA', 'IVV', 'NIO'
 	# 'BTC-USD', 'ETH-USD', 'NANO-USD', 'ADA-USD'
 	symbols = [
-		'AAPL', 'GME', 'ABNB', 'PLTR', 'ETSY', 'ENPH', 'GOOG', 'AMZN', 'IBM', 'DIA', 'IVV', 'NIO'
+		'GME', 'ABNB', 'PLTR', 'ETSY', 'ENPH', 'GOOG', 'AMZN', 'IBM', 'DIA', 'IVV', 'NIO'
 	]
-
-	# class that initialises our variables, data, objs
-	var = Variables(symbols=symbols, future=1, timescale='days', validate=False, extra_cols_bool=True)
 	
+	dates = InitialiseDates()
+	ML = InitialiseMLVars(future=1, timescale='mins', validate=True)
+	var = StockData(symbols=symbols, dates=dates, ML=ML)
+
 	for symbol in var.symbols:
-		# define training and predict bools based on if a model already exists
-		model_name = f'{symbol}-{var.timescale}-{var.epochs}epochs-extracol' if var.extra_cols_bool else f'{symbol}-{var.timescale}-{var.epochs}epochs'
-		train_bool = False if model_exists(path_vars=[symbol, var.future, var.timescale, model_name]) else True
+		''' define training and predict bools based on if a model already exists '''
+		model_name = f'{symbol}-{ML.timescale}-{ML.epochs}epochs-extracol' if var.extra_cols_bool else f'{symbol}-{ML.timescale}-{ML.epochs}epochs'
+		# train_bool = False if model_exists(path_vars=[symbol, ML.future, ML.timescale, model_name]) else True
+		train_bool = True
 		predict_future = False if train_bool else True
 		
-		# run the training/predicting script
+		''' run the training/predicting script '''
 		create_and_predict(symbol=symbol)
-
-	# show our plotted graphs
-	# plt.show()
+		tf.keras.backend.clear_session()
+		
+	plt.show()

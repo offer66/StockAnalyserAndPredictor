@@ -1,4 +1,5 @@
-from datetime import datetime as dt
+import os
+import datetime
 from dateutil.relativedelta import relativedelta
 
 import numpy as np
@@ -6,6 +7,7 @@ import pandas as pd
 from pandas_datareader import data as pdr
 from pandas_datareader._utils import RemoteDataError
 import yfinance as yf 
+yf.pdr_override()
 
 import matplotlib.pyplot as plt
 
@@ -118,17 +120,21 @@ def compare_days(stock, close_prices, RSI):
     return add_row
 
 
-def run(stock, start_date, rsi_comparison):
-    # yf.pdr_override()
-    today = dt.today().strftime('%Y-%m-%d')
+def run(stock, start_date, rsi_comparison, current=False):
+    today = datetime.date.today()
+    start_date = today - datetime.timedelta(days=365*2)
 
-    try:
-        df = pdr.DataReader(f'{stock}-USD','yahoo', start_date, today)
-    except RemoteDataError:
+    if current:
+        try:
+            df = pd.read_csv(os.path.join(os.getcwd(), f"datasets\\scraped\\{stock}", f'{stock}-total-data.csv'))
+            close_prices = df['close'].values
+        except FileNotFoundError:
+            df = pdr.get_data_yahoo(stock, start_date, today)
+            close_prices = df['Close'].values
+    else:
         df = pdr.get_data_yahoo(stock, start_date, today)
-
-    close_prices = df['Close'].values
-
+        close_prices = df['Close'].values
+        
     # do rsi caluclations
     up_prices, down_prices = up_down(close_prices)
     avg_gain, avg_loss = averages(up_prices, down_prices)
@@ -154,7 +160,10 @@ def run(stock, start_date, rsi_comparison):
 
 
 if __name__ == '__main__':
-    symbols = ['BTC-USD', 'ETH-USD']
+    symbols = [
+        'AAPL', 'TSLA', 'GME', 'ABNB', 'PLTR', 'ETSY', 'ENPH', 'GOOG', 'AMZN', 'IBM', 'DIA', 'IVV', 'NIO',
+	    'BTC-USD', 'ETH-USD', 'NANO-USD', 'ADA-USD'
+        ]
     start_date = '2019-01-01'
     rsi_comparison = pd.DataFrame(columns=[
         "Company", "Current_RSI", "Days_Observed", "Crosses", 
@@ -170,6 +179,6 @@ if __name__ == '__main__':
         print(f"Average Loss: {avg_loss} %")
         print(f"Total Profits: {avg_gain - avg_loss} %")
         print('---------------------------------------------')
-    rsi_comparison = rsi_comparison.set_index('Company')
+    rsi_comparison = rsi_comparison.set_index('Company').sort_values(by='Current_RSI')
     print(rsi_comparison)
 

@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from pandas_datareader import data as pdr
 import yfinance as yf
+yf.pdr_override()
 
 import matplotlib.pyplot as plt
 
@@ -29,12 +30,8 @@ class DailyMACD(object):
         self.__get_data()
 
     def __get_data(self):
-        try:
-            self.data = pdr.DataReader(f'{self.ticker}-USD','yahoo', self.start_date, self.end_date)
-            self.data = self.data.reset_index()
-        except:
-            self.data = pdr.get_data_yahoo(self.ticker, self.start_date, self.end_date)
-            self.data = self.data.reset_index()
+        self.data = pdr.get_data_yahoo(self.ticker, self.start_date, self.end_date)
+        self.data = self.data.reset_index()
 
         self.data = self.data.sort_values("Date")
         self.ema_data  = self.data.loc[:(self.long + self.signal_long_length)-1]
@@ -281,7 +278,10 @@ class DailyMACD(object):
 
 
 if __name__ == '__main__':
-    symbols = ['BTC-USD']
+    symbols = [
+        'AAPL', 'TSLA', 'GME', 'ABNB', 'PLTR', 'ETSY', 'ENPH', 'GOOG', 'AMZN', 'IBM', 'DIA', 'IVV', 'NIO',
+	    'BTC-USD', 'ETH-USD', 'NANO-USD', 'ADA-USD'
+        ]
     start_date = '2019-01-01'
     macd = {}
     macd_comparison = pd.DataFrame(columns=[

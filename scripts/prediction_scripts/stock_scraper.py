@@ -57,7 +57,7 @@ def latest_data(symbol, last_30_days):
     except FileNotFoundError:
         dates_to_fetch = []     # if cannot find the file then there is NO data
         av_scrape_bool = True
-    return dates_to_fetch, av_scrape_bool
+    return dates_to_fetch[:-1], av_scrape_bool
 
 
 def run(symbols):
