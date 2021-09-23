@@ -19,7 +19,7 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error
 
 import model_comparison as validation_csv
-import rsi as rsi_calc
+from analysis_scripts import rsi as rsi_calc
 
 # import initialisations
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -180,7 +180,7 @@ class StockData:
 			extra_cols_dataframe[ticker] = [dataframe, self.subsampled_data[ticker][1]]
 		return extra_cols_dataframe
 
-	def create_future_dates(self) -> (list, list):
+	def create_future_dates(self):
 		date_time = self.subsampled_data[self.symbols[0]][1]		# this is assuming all tickers trade on the same day
 		next_dates = self.next_trading_days()
 		
@@ -254,7 +254,7 @@ def series_to_supervised(data, n_in=1, n_out=1, dropnan=True) -> pd.DataFrame:
 	return agg
 
 
-def verify_model_predictions(input_data, input_objs, input_vars) -> (pd.DataFrame, pd.DataFrame, pd.DataFrame):
+def verify_model_predictions(input_data, input_objs, input_vars):
 	x_test, date_time, y_test = input_data
 	model, scaler = input_objs
 	symbol, batch, num_features, n = input_vars
@@ -310,7 +310,7 @@ def verify_model_predictions(input_data, input_objs, input_vars) -> (pd.DataFram
 	return predicted_data, actual_data, valid_plot
 	
 
-def prediction_loop(input_data, input_objs, input_vars) -> (pd.DataFrame, pd.DataFrame):
+def prediction_loop(input_data, input_objs, input_vars):
 	x_total, predicted_data, df = input_data
 	scaler, model = input_objs
 	batch, num_features = input_vars
