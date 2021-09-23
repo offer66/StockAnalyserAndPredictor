@@ -5,25 +5,21 @@ sys.path.append("scripts\\prediction_scripts\\")
 
 import pandas as pd
 
-import stock_scraper as scraper
-import model_create_predict as mcp
-import basic_analysis as analysis
-import rsi as rsi
-import macd as macd
-
-
 
 def run_portfolio_analysis():
+    import basic_analysis as analysis
     ''' Run portfolio analysis '''
     analysis.run()
 
 
 def run_scraper(symbols):
+    import stock_scraper as scraper
     ''' Run stock scraper '''
     scraper.run(symbols)
 
 
-def get_rsi():
+def get_rsi(symbols):
+    import rsi as rsi
     start_date = '2019-01-01'
     rsi_comparison = pd.DataFrame(columns=[
         "Company", "Current_RSI", "Days_Observed", "Crosses", 
@@ -32,19 +28,25 @@ def get_rsi():
     )
     print("Note that 0% - 30% RSI is undervalued and 70% - 100% RSI is overvalued!")
     for ticker in symbols:
-        rsi_comparison, avg_gain, avg_loss = run(stock=ticker, start_date=start_date, rsi_comparison=rsi_comparison)
+        rsi_comparison, avg_gain, avg_loss = rsi.run(stock=ticker, start_date=start_date, rsi_comparison=rsi_comparison, current=True)
     rsi_comparison = rsi_comparison.set_index('Company').sort_values(by='Current_RSI')
     print(rsi_comparison)
 
 
 
 def run_ml(var, ML, dates):
+    import model_create_predict as mcp
     ''' Run ML setup and prediction script '''
+    dates = mcp.InitialiseDates()
+    ML = mcp.InitialiseMLVars(future=1, timescale='mins', validate=True)
+    var = mcp.StockData(symbols=symbols, dates=dates, ML=ML)
+
+    
     for symbol in var.symbols:
         ''' define training and predict bools based on if a model already exists '''
         model_name = f'{symbol}-{ML.timescale}-{ML.epochs}epochs-extracol' if var.extra_cols_bool else f'{symbol}-{ML.timescale}-{ML.epochs}epochs'
         # train_bool = False if model_exists(path_vars=[symbol, ML.future, ML.timescale, model_name]) else True
-        train_bool = True
+        train_bool = False
         predict_future = False if train_bool else True
 		
         ''' run the training/predicting script '''
@@ -61,6 +63,7 @@ def run(symbols, features):
         run_scraper(symbols)
 
     elif features["predictor"]:
+        import model_create_predict as mcp
         print("Running ML predictor...")
         dates = mcp.InitialiseDates()
         ML = mcp.InitialiseMLVars(future=1, timescale='mins', validate=True)
@@ -74,13 +77,16 @@ def run(symbols, features):
 
 
 if __name__=="__main__":
+    # symbols = [
+	# 	'GME', 'ABNB', 'PLTR', 'ETSY', 'ENPH', 'GOOG', 'AMZN', 'IBM', 'DIA', 'IVV', 'NIO'
+	# ]
     symbols = [
-		'GME', 'ABNB', 'PLTR', 'ETSY', 'ENPH', 'GOOG', 'AMZN', 'IBM', 'DIA', 'IVV', 'NIO'
-	]
+        'GME'
+    ]
     features = {
-        "portfolio_analysis": True,
+        "portfolio_analysis": False,
         "scraper": False,
-        "predictor": False,
-        "rsi": True
+        "predictor": True,
+        "rsi": False
     }
     run(symbols=symbols, features=features)

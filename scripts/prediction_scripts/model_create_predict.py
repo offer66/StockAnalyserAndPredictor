@@ -476,19 +476,22 @@ def create_and_predict(symbol):
 if __name__=="__main__":
 	# 'AAPL', 'TSLA', 'GME', 'ABNB', 'PLTR', 'ETSY', 'ENPH', 'GOOG', 'AMZN', 'IBM', 'DIA', 'IVV', 'NIO'
 	# 'BTC-USD', 'ETH-USD', 'NANO-USD', 'ADA-USD'
+	# symbols = [
+	# 	'GME', 'ABNB', 'PLTR', 'ETSY', 'ENPH', 'GOOG', 'AMZN', 'IBM', 'DIA', 'IVV', 'NIO'
+	# ]
 	symbols = [
-		'GME', 'ABNB', 'PLTR', 'ETSY', 'ENPH', 'GOOG', 'AMZN', 'IBM', 'DIA', 'IVV', 'NIO'
-	]
+        'GME', 'AAPL', 'TSLA'
+    ]
 	
 	dates = InitialiseDates()
-	ML = InitialiseMLVars(future=1, timescale='mins', validate=True)
+	ML = InitialiseMLVars(future=1, timescale='days', validate=True)
 	var = StockData(symbols=symbols, dates=dates, ML=ML)
 
 	for symbol in var.symbols:
 		''' define training and predict bools based on if a model already exists '''
 		model_name = f'{symbol}-{ML.timescale}-{ML.epochs}epochs-extracol' if var.extra_cols_bool else f'{symbol}-{ML.timescale}-{ML.epochs}epochs'
 		# train_bool = False if model_exists(path_vars=[symbol, ML.future, ML.timescale, model_name]) else True
-		train_bool = True
+		train_bool = False
 		predict_future = False if train_bool else True
 		
 		''' run the training/predicting script '''

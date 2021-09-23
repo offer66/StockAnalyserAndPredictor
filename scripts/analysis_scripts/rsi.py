@@ -131,6 +131,7 @@ def run(stock, start_date, rsi_comparison, current=False):
         except FileNotFoundError:
             df = pdr.get_data_yahoo(stock, start_date, today)
             close_prices = df['Close'].values
+            print(df.tail(1))
     else:
         df = pdr.get_data_yahoo(stock, start_date, today)
         close_prices = df['Close'].values
