@@ -67,10 +67,11 @@ def run(tickers, timescale):
         perc_change[ticker] = calc_perc_change(data[ticker])
         weekday_perc_change[ticker] = get_days_col(perc_change[ticker])
         aggregated_data[ticker] = aggregate(weekday_perc_change[ticker])
-    print(aggregated_data)
+        print(
+            f'Aggregated Data for {ticker}: \n {aggregated_data[ticker].sort_values("Adj Close")}'
+        )
 
 
 if __name__ == "__main__":
     tickers = ["GME", "BTC-USD", "ETH-USD"]
     run(tickers=tickers, timescale=0.25)
-    plt.show()
