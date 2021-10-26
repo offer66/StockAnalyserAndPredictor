@@ -12,6 +12,7 @@ scripts/prediction_scripts/__pycache__/
 scripts/analysis_scripts/__pycache__/
 scripts/prediction_scripts/__pycache__/
 
+scripts/analysis_scripts/test.py
 scripts/prediction_scripts/stock_scraper_local.py
 scripts/prediction_scripts/run_stock_scraper.bat
 

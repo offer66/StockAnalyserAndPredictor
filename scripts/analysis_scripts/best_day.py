@@ -73,5 +73,5 @@ def run(tickers, timescale):
 
 
 if __name__ == "__main__":
-    tickers = ["GME", "BTC-USD", "ETH-USD"]
+    tickers = ["GME"]
     run(tickers=tickers, timescale=0.25)
