@@ -466,8 +466,11 @@ def transform_data(dataframe, n, num_features):
 
     # split the data into train and test values
     total_values = total_df.values
+    # previous definition of n is based on before series_to_supervised transformation
+    n = total_values.shape[0]
     train_values = total_values[: int(n * 0.7), :]
     test_values = total_values[int(n * 0.7) :, :]
+    print(total_values.shape, train_values.shape, test_values.shape)
 
     # split the train and test values into x and y (x is the input and y is the expected output)
     x_train, y_train = (
@@ -487,7 +490,6 @@ def transform_data(dataframe, n, num_features):
         total_values[:, -num_features],
     )
     x_total = x_total.reshape((x_total.shape[0], batch, num_features))
-
     return x_train, y_train, x_test, y_test, x_total, y_total, scaler
 
 
@@ -638,7 +640,21 @@ if __name__ == "__main__":
     # symbols = [
     # 	'GME', 'ABNB', 'PLTR', 'ETSY', 'ENPH', 'GOOG', 'AMZN', 'IBM', 'DIA', 'IVV', 'NIO'
     # ]
-    symbols = ["AAPL"]
+    symbols = [
+        "AAPL",
+        "TSLA",
+        "GME",
+        "ABNB",
+        "PLTR",
+        "ETSY",
+        "ENPH",
+        "GOOG",
+        "AMZN",
+        "IBM",
+        "DIA",
+        "IVV",
+        "NIO",
+    ]
 
     dates = InitialiseDates()
     ML = InitialiseMLVars(future=1, timescale="mins", validate=True)
@@ -646,6 +662,7 @@ if __name__ == "__main__":
 
     for symbol in var.symbols:
         """define training and predict bools based on if a model already exists"""
+        print(f"\n {symbol} \n")
         model_name = (
             f"{symbol}-{ML.timescale}-{ML.epochs}epochs-extracol"
             if var.extra_cols_bool
