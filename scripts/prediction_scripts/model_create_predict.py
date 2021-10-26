@@ -371,11 +371,11 @@ def verify_model_predictions(input_data, input_objs, input_vars):
     ]  # fix some issues with predicted and invyhat misshape]
 
     i = 0
-    print((len(predicted_data) - len(inv_yhat[:, i])))
-    print((len(predicted_data) - len(inv_yhat[:, i])) / len(date_time))
-    print(inv_yhat[:, i][-5:])
-    print(predicted_data.shape)
-    print(inv_yhat.shape)
+    # print((len(predicted_data) - len(inv_yhat[:, i])))
+    # print((len(predicted_data) - len(inv_yhat[:, i])) / len(date_time))
+    # print(inv_yhat[:, i][-5:])
+    # print(predicted_data.shape)
+    # print(inv_yhat.shape)
     for name in var.column_names:
         predicted_data[name] = inv_yhat[:, i]
         actual_data[name] = inv_y[:, i]
@@ -392,6 +392,14 @@ def verify_model_predictions(input_data, input_objs, input_vars):
 
     predicted_data.set_index("time", inplace=True)
     actual_data.set_index("time", inplace=True)
+
+    # for the min timescale, reduce the scope of the plot for better granularity and to remove timescale as the plotting index
+    if var.timescale == "mins":
+        valid_plot_plot = valid_plot[
+            -16 * 60 * 5 :
+        ]  # grabs the last 5 days of minute data
+        print(valid_plot_plot)
+
     valid_plot.set_index("time", inplace=True)
 
     # plot
@@ -401,9 +409,13 @@ def verify_model_predictions(input_data, input_objs, input_vars):
     )
     ax2.set_xlabel(f"Dates")
     ax2.set_ylabel(f"Price (USD)")
-    splits = int(valid_plot.shape[0] / 100) if valid_plot.shape[0] > 100 else 1
-    ax2.plot(valid_plot[["close", "predicted"]][::splits])
+    splits = (
+        int(valid_plot_plot.shape[0] / 100) if valid_plot_plot.shape[0] > 100 else 1
+    )
+    ax2.plot(valid_plot_plot[["close"]][::splits])
+    ax2.plot(valid_plot_plot[["predicted"]][::splits], marker="x")
     ax2.legend(["Actual", "Predicted"], loc="lower right")
+
     # plt.show()
     return predicted_data, actual_data, valid_plot
 
@@ -456,7 +468,6 @@ def transform_data(dataframe, n, num_features):
     total_values = total_df.values
     train_values = total_values[: int(n * 0.7), :]
     test_values = total_values[int(n * 0.7) :, :]
-    print(len(total_values), len(train_values), len(test_values))
 
     # split the train and test values into x and y (x is the input and y is the expected output)
     x_train, y_train = (
@@ -646,7 +657,6 @@ if __name__ == "__main__":
             else True
         )
         predict_future = False if train_bool else True
-        print("Number of day data points", len(dates.valid_days))
 
         """ run the training/predicting script """
         create_and_predict(symbol=symbol)
