@@ -92,12 +92,10 @@ class InitialiseMLVars:
         self,
         future: int = 1,
         timescale: str = "days",
-        validate: bool = False,
         extra_cols_bool: bool = True,
     ):
         self.future = future
         self.timescale = timescale
-        self.validate = validate
         self.extra_cols_bool = extra_cols_bool
         self.epochs = self.get_epoch()
         self.batch = self.get_batch()
@@ -525,8 +523,7 @@ def create_and_predict(symbol):
 
     timescale = ML.timescale
     epochs = ML.epochs
-    train_model = train_bool
-    validate = ML.validate
+    validate, train_model = train_bool, train_bool
     batch = ML.batch
 
     n = df.shape[0]
@@ -671,7 +668,7 @@ if __name__ == "__main__":
     dates = InitialiseDates()
     string_date = str(dates.today).replace("-", "")
 
-    ML = InitialiseMLVars(future=1, timescale="days", validate=True)
+    ML = InitialiseMLVars(future=1, timescale="mins")
     var = StockData(symbols=symbols, dates=dates, ML=ML)
     for symbol in var.symbols:
         """define training and predict bools based on if a model already exists"""
@@ -687,7 +684,7 @@ if __name__ == "__main__":
         )
         predict_future = False if train_bool else True
         print(
-            f"\n {symbol} \n {dates.today} \n Train: {train_bool} \n Validate: {ML.validate} \n Predict: {predict_future} \n"
+            f"\n {symbol} \n {dates.today} \n Train / Validate: {train_bool} \n Predict: {predict_future} \n"
         )
 
         """ run the training/predicting script """
