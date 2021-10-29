@@ -586,6 +586,9 @@ def create_and_predict(symbol):
         valid_plot.to_csv(os.path.join(var._dirs[symbol][2], valid_file_name))
         validation_csv.run(valid_file_name, symbol)
 
+        ## writes up historical accuracy of model
+        comparison_csv.run(valid_file_name, symbol)
+
     ## make new predictions
     elif predict_future:
         print("Predicting New Close Prices...")
@@ -639,17 +642,28 @@ def create_and_predict(symbol):
 if __name__ == "__main__":
     # 'AAPL', 'TSLA', 'GME', 'ABNB', 'PLTR', 'ETSY', 'ENPH', 'GOOG', 'AMZN', 'IBM', 'DIA', 'IVV', 'NIO'
     # 'BTC-USD', 'ETH-USD', 'NANO-USD', 'ADA-USD'
-    # symbols = [
-    # 	'GME', 'ABNB', 'PLTR', 'ETSY', 'ENPH', 'GOOG', 'AMZN', 'IBM', 'DIA', 'IVV', 'NIO'
-    # ]
     symbols = [
         "AAPL",
+        "TSLA",
+        "GME",
+        "ABNB",
+        "PLTR",
+        "ETSY",
+        "ENPH",
+        "GOOG",
+        "AMZN",
+        "IBM",
+        "DIA",
+        "IVV",
     ]
+    # symbols = [
+    #     "AAPL",
+    # ]
 
     dates = InitialiseDates()
     string_date = str(dates.today).replace("-", "")
 
-    ML = InitialiseMLVars(future=2, timescale="mins", validate=True)
+    ML = InitialiseMLVars(future=1, timescale="mins", validate=True)
     var = StockData(symbols=symbols, dates=dates, ML=ML)
     for symbol in var.symbols:
         """define training and predict bools based on if a model already exists"""

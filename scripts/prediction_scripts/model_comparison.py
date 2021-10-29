@@ -4,6 +4,7 @@ import csv
 import pandas as pd
 import numpy as np
 from numpy import nan as NaN
+import datetime
 
 import matplotlib.pyplot as plt
 
@@ -27,13 +28,9 @@ def calculate_accuracy(df):
     return change
 
 
-def run(valid_file, ticker):
-    # validation_data = {}
-    # files = [os.path.join(path, f) for f in os.listdir(path) if ".csv" in f]
-    # validation_data[ticker] = files
-
+def run(comparison_file, ticker):
     path = os.path.join(_data, ticker)
-    chosen_model = os.path.join(path, valid_file)
+    chosen_model = os.path.join(path, comparison_file)
     df = pd.read_csv(chosen_model)  # 0th value is the comparison table
 
     df["point_difference"] = df["predicted"] - df["close"]
@@ -51,49 +48,44 @@ def run(valid_file, ticker):
     try:
         df2 = pd.read_csv(os.path.join(path, f"{ticker}-comparison-data.csv"))
     except FileNotFoundError:
-        df2 = pd.DataFrame.from_dict(
-            {
-                "data": [
-                    "avg_point_difference",
-                    "avg_perc_close",
-                    "avg_perc_predicted",
-                    "avg_perc_difference",
-                    "avg_error_predicted",
-                ],
-            }
+        df2 = pd.DataFrame(
+            columns=[
+                "date",
+                "model",
+                "avg_point_difference",
+                "avg_perc_close",
+                "avg_perc_predicted",
+                "avg_perc_difference",
+                "avg_error_predicted",
+            ]
         )
 
-    chosen_model = chosen_model.replace(_data + f"\\{ticker}\\", "")
-    df2[chosen_model] = [
-        avg_point_difference,
-        avg_perc_close,
-        avg_perc_predicted,
-        avg_perc_difference,
-        avg_error_predicted,
-    ]
-    df2 = df2.set_index("data")
+    df2 = df2.append(
+        {
+            "date": datetime.date.today(),
+            "model": chosen_model.replace(_data + f"\\{ticker}\\", ""),
+            "avg_point_difference": avg_point_difference,
+            "avg_perc_close": avg_perc_close,
+            "avg_perc_predicted": avg_perc_predicted,
+            "avg_perc_difference": avg_perc_difference,
+            "avg_error_predicted": avg_error_predicted,
+        },
+        ignore_index=True,
+    )
+    print(df2)
 
     new_path = os.path.join(path, f"{ticker}-comparison-data.csv")
-
-    df3 = df2.transpose()
-    df3.to_csv(os.path.join(_data, f"{ticker}-comparison-data-transposed.csv"))
     df2.to_csv(new_path)
-
-    # print("Average Point Difference: ", avg_point_difference)
-    # print(f"Average Percent Change Close: {avg_perc_close} %")
-    # print(f"Average Percent Change Predicted: {avg_perc_predicted} %")
-    # print(f"How Variation Compares: {avg_perc_difference} %")
-    print(f"Predicted Error from Close Results: {avg_error_predicted} %")
 
 
 if __name__ == "__main__":
     symbols = ["AAPL"]
-    validation_data = {}
+    comparison_data = {}
     for ticker in symbols:
         path = os.path.join(_data, ticker)
         files = [os.path.join(path, f) for f in os.listdir(path) if ".csv" in f]
-        validation_data[ticker] = files
+        comparison_data[ticker] = files
 
-    valid_file = validation_data["AAPL"][1]
+    comparison_file = comparison_data["AAPL"][1]
 
-    run(valid_file, ticker)
+    run(comparison_file, ticker)
