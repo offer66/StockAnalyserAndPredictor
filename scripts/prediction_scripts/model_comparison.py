@@ -47,6 +47,17 @@ def run(comparison_file, ticker):
 
     try:
         df2 = pd.read_csv(os.path.join(path, f"{ticker}-comparison-data.csv"))
+        df2 = df2[
+            [
+                "date",
+                "model",
+                "avg_point_difference",
+                "avg_perc_close",
+                "avg_perc_predicted",
+                "avg_perc_difference",
+                "avg_error_predicted",
+            ]
+        ]
     except FileNotFoundError:
         df2 = pd.DataFrame(
             columns=[
@@ -72,20 +83,45 @@ def run(comparison_file, ticker):
         },
         ignore_index=True,
     )
-    print(df2)
 
     new_path = os.path.join(path, f"{ticker}-comparison-data.csv")
+    df2 = df2[
+        [
+            "date",
+            "model",
+            "avg_point_difference",
+            "avg_perc_close",
+            "avg_perc_predicted",
+            "avg_perc_difference",
+            "avg_error_predicted",
+        ]
+    ]
     df2.to_csv(new_path)
 
 
 if __name__ == "__main__":
-    symbols = ["AAPL"]
+    symbols = [
+        "AAPL",
+        "TSLA",
+        "GME",
+        "ABNB",
+        "PLTR",
+        "ETSY",
+        "ENPH",
+        "GOOG",
+        "AMZN",
+        "IBM",
+        "DIA",
+        "IVV",
+        "NIO",
+    ]
+    # symbols = ["AAPL"]
     comparison_data = {}
     for ticker in symbols:
         path = os.path.join(_data, ticker)
         files = [os.path.join(path, f) for f in os.listdir(path) if ".csv" in f]
         comparison_data[ticker] = files
 
-    comparison_file = comparison_data["AAPL"][1]
+        comparison_file = comparison_data[ticker][1]
 
-    run(comparison_file, ticker)
+        run(comparison_file, ticker)
