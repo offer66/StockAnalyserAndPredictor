@@ -7,6 +7,7 @@ import datetime
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+
 import numpy as np
 import pandas as pd
 from pandas_datareader import data as pdr
@@ -20,6 +21,7 @@ from sklearn.metrics import mean_squared_error
 
 import model_validation as validation_csv
 import model_comparison as comparison_csv
+import stock_scraper_local as scraper
 
 import rsi as rsi_calc
 
@@ -360,10 +362,8 @@ def verify_model_predictions(input_data, input_objs, input_vars):
     valid_plot = pd.DataFrame({"time": [], "close": [], "predicted": []})
     shift = {"AAPL": batch + 271, "TSLA": batch + 945, "GME": batch + 5460}
     shift = batch if ML.timescale == "mins" else batch
-    predicted_data["time"], actual_data["time"] = (
-        date_time.tolist()[int(n * 0.7) + shift :],
-        date_time.tolist()[int(n * 0.7) + shift :],
-    )
+    predicted_data["time"], actual_data["time"] = date_time.tolist(), date_time.tolist()
+
     predicted_data = predicted_data[
         -inv_yhat.shape[0] :
     ]  # fix some issues with predicted and invyhat misshape]
@@ -371,12 +371,8 @@ def verify_model_predictions(input_data, input_objs, input_vars):
         -inv_yhat.shape[0] :
     ]  # fix some issues with predicted and invyhat misshape]
 
+    # print(predicted_data.shape, inv_yhat.shape)
     i = 0
-    # print((len(predicted_data) - len(inv_yhat[:, i])))
-    # print((len(predicted_data) - len(inv_yhat[:, i])) / len(date_time))
-    # print(inv_yhat[:, i][-5:])
-    # print(predicted_data.shape)
-    # print(inv_yhat.shape)
     for name in var.column_names:
         predicted_data[name] = inv_yhat[:, i]
         actual_data[name] = inv_y[:, i]
@@ -397,10 +393,15 @@ def verify_model_predictions(input_data, input_objs, input_vars):
     # for the min timescale, reduce the scope of the plot for better granularity and to remove timescale as the plotting index
     if var.timescale == "mins":
         valid_plot_plot = valid_plot[
-            -16 * 60 * 5 :
-        ]  # grabs the last 5 days of minute data
-        print(valid_plot_plot)
+            -16 * 60 * 2 :
+        ]  # grabs the last 2 days of minute data
+    else:
+        valid_plot_plot = valid_plot.copy()
 
+    print(valid_plot_plot)
+    print(valid_plot)
+    valid_plot_plot["time"] = valid_plot_plot["time"].dt.strftime("%Y-%m-%d")
+    valid_plot_plot.set_index("time", inplace=True)
     valid_plot.set_index("time", inplace=True)
 
     # plot
@@ -416,6 +417,7 @@ def verify_model_predictions(input_data, input_objs, input_vars):
     ax2.plot(valid_plot_plot[["close"]][::splits])
     ax2.plot(valid_plot_plot[["predicted"]][::splits], marker="x")
     ax2.legend(["Actual", "Predicted"], loc="lower right")
+    plt.xticks(rotation=90)
 
     # plt.show()
     return predicted_data, actual_data, valid_plot
@@ -644,26 +646,19 @@ if __name__ == "__main__":
     # 'BTC-USD', 'ETH-USD', 'NANO-USD', 'ADA-USD'
     symbols = [
         "AAPL",
-        "TSLA",
-        "GME",
-        "ABNB",
-        "PLTR",
-        "ETSY",
-        "ENPH",
-        "GOOG",
-        "AMZN",
-        "IBM",
-        "DIA",
-        "IVV",
     ]
+
     # symbols = [
     #     "AAPL",
     # ]
 
+    ## runs the stock scraper if some previous days data is missing (scrapes minute data for past 14 days)
+    scraper.run(symbols)
+
     dates = InitialiseDates()
     string_date = str(dates.today).replace("-", "")
 
-    ML = InitialiseMLVars(future=1, timescale="mins", validate=True)
+    ML = InitialiseMLVars(future=1, timescale="days", validate=True)
     var = StockData(symbols=symbols, dates=dates, ML=ML)
     for symbol in var.symbols:
         """define training and predict bools based on if a model already exists"""
