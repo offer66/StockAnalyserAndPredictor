@@ -593,7 +593,7 @@ def create_and_predict(symbol):
         comparison_csv.run(valid_file_name, symbol)
 
     ## make new predictions
-    elif predict_future:
+    if predict_future:
         print("Predicting New Close Prices...")
         predicted_data = pd.DataFrame({name: [] for name in var.column_names})
 
