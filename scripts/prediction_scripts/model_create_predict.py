@@ -391,16 +391,17 @@ def verify_model_predictions(input_data, input_objs, input_vars):
     actual_data.set_index("time", inplace=True)
 
     # for the min timescale, reduce the scope of the plot for better granularity and to remove timescale as the plotting index
+    valid_plot_plot = valid_plot.copy()
     if var.timescale == "mins":
-        valid_plot_plot = valid_plot[
-            -16 * 60 * 2 :
-        ]  # grabs the last 2 days of minute data
+        valid_plot_plot["time"] = valid_plot_plot["time"].dt.strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )
+        valid_plot_plot = valid_plot_plot[
+            -60 * 16 * 2 :
+        ]  # grabs last 2 days of min data
     else:
-        valid_plot_plot = valid_plot.copy()
+        valid_plot_plot["time"] = valid_plot_plot["time"].dt.strftime("%Y-%m-%d")
 
-    print(valid_plot_plot)
-    print(valid_plot)
-    valid_plot_plot["time"] = valid_plot_plot["time"].dt.strftime("%Y-%m-%d")
     valid_plot_plot.set_index("time", inplace=True)
     valid_plot.set_index("time", inplace=True)
 
@@ -646,6 +647,18 @@ if __name__ == "__main__":
     # 'BTC-USD', 'ETH-USD', 'NANO-USD', 'ADA-USD'
     symbols = [
         "AAPL",
+        "TSLA",
+        "GME",
+        "ABNB",
+        "PLTR",
+        "ETSY",
+        "ENPH",
+        "GOOG",
+        "AMZN",
+        "IBM",
+        "DIA",
+        "IVV",
+        "NIO",
     ]
 
     # symbols = [
