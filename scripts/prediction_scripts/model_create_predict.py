@@ -422,7 +422,6 @@ def verify_model_predictions(input_data, input_objs, input_vars):
     return predicted_data, actual_data, valid_plot
 
 
-@tf.function
 def prediction_loop(input_data, input_objs, input_vars):
     x_total, predicted_data, df = input_data
     scaler, model = input_objs
@@ -633,6 +632,34 @@ def create_and_predict(symbol):
 
         df.to_csv(os.path.join(var._dirs[symbol][1], valid_file_name))
 
+        if var.timescale == "days":
+            df.reset_index(inplace=True)
+            try:
+                df2 = pd.read_csv(
+                    os.path.join(var._dirs[symbol][1], f"{symbol}-comparison-data.csv")
+                )
+            except FileNotFoundError:
+                df2 = pd.DataFrame(columns=df.columns.insert(0, "predicted_on"))
+
+            predicted_rows = df[-ML.future :].values.tolist()
+            insert_date = datetime.date.today().strftime("%Y-%m-%d")
+            for row in predicted_rows:
+                row.insert(0, insert_date)
+                df2 = df2.append(
+                    pd.Series(
+                        row,
+                        index=df.columns.insert(0, "predicted_on"),
+                    ),
+                    ignore_index=True,
+                )
+
+            df2.set_index("predicted_on", inplace=True)
+            df2.to_csv(
+                os.path.join(var._dirs[symbol][1], f"{symbol}-comparison-data.csv")
+            )
+
+            df.set_index("time", inplace=True)
+
         print(
             f"\n prediction data (last {5 + ML.future} values): \n {df.tail(5 + ML.future)}"
         )
@@ -642,25 +669,25 @@ def create_and_predict(symbol):
 if __name__ == "__main__":
     # 'AAPL', 'TSLA', 'GME', 'ABNB', 'PLTR', 'ETSY', 'ENPH', 'GOOG', 'AMZN', 'IBM', 'DIA', 'IVV', 'NIO'
     # 'BTC-USD', 'ETH-USD', 'NANO-USD', 'ADA-USD'
-    symbols = [
-        "AAPL",
-        "TSLA",
-        "GME",
-        "ABNB",
-        "PLTR",
-        "ETSY",
-        "ENPH",
-        "GOOG",
-        "AMZN",
-        "IBM",
-        "DIA",
-        "IVV",
-        "NIO",
-    ]
-
     # symbols = [
     #     "AAPL",
+    #     "TSLA",
+    #     "GME",
+    #     "ABNB",
+    #     "PLTR",
+    #     "ETSY",
+    #     "ENPH",
+    #     "GOOG",
+    #     "AMZN",
+    #     "IBM",
+    #     "DIA",
+    #     "IVV",
+    #     "NIO",
     # ]
+
+    symbols = [
+        "AAPL",
+    ]
 
     ## runs the stock scraper if some previous days data is missing (scrapes minute data for past 14 days)
     scraper.run(symbols)
@@ -668,7 +695,7 @@ if __name__ == "__main__":
     dates = InitialiseDates()
     string_date = str(dates.today).replace("-", "")
 
-    ML = InitialiseMLVars(future=1, timescale="mins")
+    ML = InitialiseMLVars(future=1, timescale="days")
     var = StockData(symbols=symbols, dates=dates, ML=ML)
     for symbol in var.symbols:
         """define training and predict bools based on if a model already exists"""
