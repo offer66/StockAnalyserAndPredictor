@@ -18,7 +18,8 @@ import tensorflow as tf
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error
 
-import model_comparison as validation_csv
+import model_validation as validation_csv
+import model_comparison as comparison_csv
 
 import rsi as rsi_calc
 
@@ -507,8 +508,9 @@ def create_and_predict(symbol):
         if ML.extra_cols_bool
         else var.subsampled_data[symbol][1]
     )
+    string_date = str(dates.today).replace("-", "")
     model_name = (
-        f"{symbol}-{ML.timescale}-{ML.epochs}epochs-extracol"
+        f"{string_date}-{symbol}-{ML.timescale}-{ML.epochs}epochs-extracol"
         if ML.extra_cols_bool
         else f"{symbol}-{ML.timescale}-{ML.epochs}epochs"
     )
@@ -571,7 +573,7 @@ def create_and_predict(symbol):
 
     ## verify model performance compared to actual data
     model = tf.keras.models.load_model(os.path.join(_models, model_name))
-    if not predict_future or validate:
+    if validate:
         print("Verifying Models Predictions...")
         input_data = [x_test, date_time, y_test]
         input_objs = [model, scaler]
@@ -585,7 +587,7 @@ def create_and_predict(symbol):
         validation_csv.run(valid_file_name, symbol)
 
     ## make new predictions
-    else:
+    elif predict_future:
         print("Predicting New Close Prices...")
         predicted_data = pd.DataFrame({name: [] for name in var.column_names})
 
@@ -642,29 +644,17 @@ if __name__ == "__main__":
     # ]
     symbols = [
         "AAPL",
-        "TSLA",
-        "GME",
-        "ABNB",
-        "PLTR",
-        "ETSY",
-        "ENPH",
-        "GOOG",
-        "AMZN",
-        "IBM",
-        "DIA",
-        "IVV",
-        "NIO",
     ]
 
     dates = InitialiseDates()
-    ML = InitialiseMLVars(future=1, timescale="mins", validate=True)
-    var = StockData(symbols=symbols, dates=dates, ML=ML)
+    string_date = str(dates.today).replace("-", "")
 
+    ML = InitialiseMLVars(future=2, timescale="mins", validate=True)
+    var = StockData(symbols=symbols, dates=dates, ML=ML)
     for symbol in var.symbols:
         """define training and predict bools based on if a model already exists"""
-        print(f"\n {symbol} \n")
         model_name = (
-            f"{symbol}-{ML.timescale}-{ML.epochs}epochs-extracol"
+            f"{string_date}-{symbol}-{ML.timescale}-{ML.epochs}epochs-extracol"
             if var.extra_cols_bool
             else f"{symbol}-{ML.timescale}-{ML.epochs}epochs"
         )
@@ -674,6 +664,9 @@ if __name__ == "__main__":
             else True
         )
         predict_future = False if train_bool else True
+        print(
+            f"\n {symbol} \n {dates.today} \n Train: {train_bool} \n Validate: {ML.validate} \n Predict: {predict_future} \n"
+        )
 
         """ run the training/predicting script """
         create_and_predict(symbol=symbol)

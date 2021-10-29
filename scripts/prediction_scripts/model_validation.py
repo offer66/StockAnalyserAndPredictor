@@ -28,13 +28,9 @@ def calculate_accuracy(df):
 
 
 def run(valid_file, ticker):
-    # validation_data = {}
-    # files = [os.path.join(path, f) for f in os.listdir(path) if ".csv" in f]
-    # validation_data[ticker] = files
-
     path = os.path.join(_data, ticker)
     chosen_model = os.path.join(path, valid_file)
-    df = pd.read_csv(chosen_model)  # 0th value is the comparison table
+    df = pd.read_csv(chosen_model)  # 0th value is the validation table
 
     df["point_difference"] = df["predicted"] - df["close"]
     df["perc_close"] = df["close"].pct_change() * 100
@@ -49,7 +45,7 @@ def run(valid_file, ticker):
     avg_error_predicted = df["predicted_error"].mean(axis=0)
 
     try:
-        df2 = pd.read_csv(os.path.join(path, f"{ticker}-comparison-data.csv"))
+        df2 = pd.read_csv(os.path.join(path, f"{ticker}-validation-data.csv"))
     except FileNotFoundError:
         df2 = pd.DataFrame.from_dict(
             {
@@ -73,10 +69,10 @@ def run(valid_file, ticker):
     ]
     df2 = df2.set_index("data")
 
-    new_path = os.path.join(path, f"{ticker}-comparison-data.csv")
+    new_path = os.path.join(path, f"{ticker}-validation-data.csv")
 
     df3 = df2.transpose()
-    df3.to_csv(os.path.join(_data, f"{ticker}-comparison-data-transposed.csv"))
+    df3.to_csv(os.path.join(_data, f"{ticker}-validation-data-transposed.csv"))
     df2.to_csv(new_path)
 
     # print("Average Point Difference: ", avg_point_difference)
